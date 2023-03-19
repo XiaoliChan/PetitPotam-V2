@@ -1,7 +1,7 @@
 from impacket import system_errors
 from impacket.dcerpc.v5.ndr import NDRCALL, NDRSTRUCT
 from impacket.dcerpc.v5.rpcrt import DCERPCException
-from impacket.dcerpc.v5.dtypes import UUID, ULONG, WSTR, DWORD, NULL, BOOL, UCHAR, PCHAR, RPC_SID, LPWSTR
+from impacket.dcerpc.v5.dtypes import UUID, ULONG, WSTR, DWORD, NULL, BOOL, UCHAR, PCHAR, RPC_SID, LPWSTR, NDRPOINTERNULL
 
 ################################################################################
 # STRUCTURES
@@ -70,7 +70,8 @@ class EFS_RPC_BLOB(NDRSTRUCT):
 class ENCRYPTION_CERTIFICATE_LIST(NDRSTRUCT):
     align = 1
     structure = (
-        ('Data', ':'),
+        ('nUsers', DWORD),
+        ('Users', ENCRYPTION_CERTIFICATE_HASH),
     )
 
 class ENCRYPTION_PROTECTOR_LIST(NDRSTRUCT):
@@ -186,7 +187,7 @@ class EfsRpcRemoveUsersFromFileResponse(NDRCALL):
         ('ErrorCode', ULONG),
     )
 
-# Not working
+# Working !
 class EfsRpcAddUsersToFile(NDRCALL):
     opnum = 9
     structure = (
@@ -204,7 +205,7 @@ class EfsRpcFileKeyInfo(NDRCALL):
     opnum = 12
     structure = (
         ('FileName', WSTR),
-        ('infoClass', DWORD),
+        ('InfoClass', DWORD),
     )
 class EfsRpcFileKeyInfoResponse(NDRCALL):
     structure = (
@@ -227,14 +228,13 @@ class EfsRpcDuplicateEncryptionInfoFileResponse(NDRCALL):
         ('ErrorCode', ULONG),
     )
 
-# Don't know how to make it working :(
+# Working !
 class EfsRpcAddUsersToFileEx(NDRCALL):
     opnum = 15
     structure = (
         ('dwFlags', DWORD),
-        ('Reserved', EFS_RPC_BLOB),
+        ('Reserved', NDRPOINTERNULL),
         ('FileName', WSTR),
-        ('dwAttributes', DWORD),
         ('EncryptionCertificates', ENCRYPTION_CERTIFICATE_LIST),
     ) 
 class EfsRpcAddUsersToFileExResponse(NDRCALL):
@@ -242,7 +242,7 @@ class EfsRpcAddUsersToFileExResponse(NDRCALL):
         ('ErrorCode', ULONG),
     )
 
-# Don't know how to make it working :(
+# Don't know how to make it work :(
 class EfsRpcFileKeyInfoEx(NDRCALL):
     opnum = 16
     structure = (
@@ -267,7 +267,7 @@ class EfsRpcGetEncryptedFileMetadataResponse(NDRCALL):
         ('ErrorCode', ULONG),
     )   
 
-# Don't know how to make it working :(
+# Don't know how to make it work :(
 class EfsRpcSetEncryptedFileMetadata(NDRCALL):
     opnum = 19
     structure = (
@@ -281,7 +281,7 @@ class EfsRpcSetEncryptedFileMetadataResponse(NDRCALL):
         ('ErrorCode', ULONG),
     )
 
-# Don't know how to make it working :(
+# Don't know how to make it work :(
 class EfsRpcEncryptFileExSrv(NDRCALL):
     opnum = 21
     structure = (
