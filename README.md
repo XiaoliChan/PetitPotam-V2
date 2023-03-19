@@ -17,3 +17,7 @@ https://docs.microsoft.com/en-us/openspecs/windows_protocols/ms-efsr/08796ba8-01
 
 or use all - for all pipes :)
 ![image](https://user-images.githubusercontent.com/20562821/126829486-3c6fa938-6e6c-4c61-ace5-74c99f16bccf.png)
+
+# Fuzz mode
+Just fuzzing every available MS-EFSR method ¯\\_(ツ)_/¯
+![image](https://user-images.githubusercontent.com/30458572/225883734-78b03088-8b5b-4299-838d-637d0e0a8e8c.png)
